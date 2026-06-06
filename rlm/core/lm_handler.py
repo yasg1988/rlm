@@ -127,7 +127,8 @@ class LMRequestHandler(StreamRequestHandler):
                         prompt=prompt,
                         response=content,
                         usage_summary=usage_summary,
-                        execution_time=total_time / len(request.prompts),  # approximate per-prompt time
+                        execution_time=total_time
+                        / len(request.prompts),  # approximate per-prompt time
                     )
                 )
 

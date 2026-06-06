@@ -126,7 +126,9 @@ class RLMChatCompletion:
     metadata: dict | None = (
         None  # Full trajectory (run_metadata + iterations) when logger captures it
     )
-    error: str | None = None  # Set when this single call failed (e.g. in a batch); response is empty.
+    error: str | None = (
+        None  # Set when this single call failed (e.g. in a batch); response is empty.
+    )
 
     def to_dict(self):
         out = {
