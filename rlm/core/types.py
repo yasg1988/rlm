@@ -3,6 +3,7 @@ from types import ModuleType
 from typing import Any, Literal
 
 ClientBackend = Literal[
+    "codex",
     "openai",
     "portkey",
     "openrouter",

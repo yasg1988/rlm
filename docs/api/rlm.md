@@ -71,7 +71,7 @@ RLM(
 #### `backend`
 {: .no_toc }
 
-**Type:** `Literal["openai", "portkey", "openrouter", "vllm", "anthropic"]`
+**Type:** `Literal["codex", "openai", "portkey", "openrouter", "vllm", "anthropic"]`
 **Default:** `"openai"`
 
 The LM provider backend to use for the root model.
@@ -99,6 +99,7 @@ Configuration passed to the LM client. Required fields vary by backend:
 
 | Backend | Required | Optional |
 |:--------|:---------|:---------|
+| `codex` | — | `model_name`, `codex_bin`, `cwd`, `sandbox`, `approval_policy`, `timeout`, `extra_args` |
 | `openai` | `model_name` | `api_key`, `base_url` |
 | `anthropic` | `model_name` | `api_key` |
 | `portkey` | `model_name`, `api_key` | `base_url` |
@@ -113,6 +114,20 @@ backend_kwargs = {
     "base_url": "https://api.openai.com/v1",  # Optional
 }
 ```
+
+Experimental Codex CLI backend:
+
+```python
+backend_kwargs = {
+    "sandbox": "read-only",
+    "approval_policy": "never",
+    "timeout": 300,
+}
+```
+
+The `codex` backend runs `codex exec` locally and reuses the existing Codex CLI
+authentication. It returns the final Codex agent message from stdout. Treat it
+as an agent-backed adapter, not a raw model completion API.
 
 ---
 
