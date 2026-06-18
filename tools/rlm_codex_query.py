@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from rlm import RLM
+from rlm.clients.codex import CodexClient
 from rlm.logger import RLMLogger
 
 
@@ -33,6 +34,16 @@ def parse_args() -> argparse.Namespace:
         "--skip-git-repo-check",
         action="store_true",
         help="Pass --skip-git-repo-check to codex exec.",
+    )
+    parser.add_argument(
+        "--direct",
+        action="store_true",
+        help="Bypass recursive RLM and send the prompt directly to Codex CLI.",
+    )
+    parser.add_argument(
+        "--auto-direct-fallback",
+        action="store_true",
+        help="Retry with direct Codex when RLM cannot access its context.",
     )
     return parser.parse_args()
 
@@ -63,6 +74,10 @@ def main() -> int:
     if args.model:
         backend_kwargs["model_name"] = args.model
 
+    if args.direct:
+        print(run_direct_codex(prompt, backend_kwargs))
+        return 0
+
     rlm = RLM(
         backend="codex",
         backend_kwargs=backend_kwargs,
@@ -74,8 +89,34 @@ def main() -> int:
         verbose=args.verbose,
     )
     result = rlm.completion(prompt)
+    if args.auto_direct_fallback and looks_like_missing_context(result.response):
+        print(run_direct_codex(prompt, backend_kwargs))
+        return 0
     print(result.response)
     return 0
+
+
+def looks_like_missing_context(response: str) -> bool:
+    text = response.lower()
+    markers = [
+        "context was never available",
+        "context variable",
+        "could not inspect",
+        "no repl tool",
+        "necessary `context` was never available",
+    ]
+    return any(marker in text for marker in markers)
+
+
+def run_direct_codex(prompt: str, backend_kwargs: dict) -> str:
+    client = CodexClient(**backend_kwargs)
+    direct_prompt = (
+        "You are doing read-only research. Do not modify files. "
+        "Answer directly from the prompt content and any read-only repository inspection "
+        "allowed by the sandbox. If context is included in the prompt, treat it as the source of truth.\n\n"
+        + prompt
+    )
+    return client.completion(direct_prompt)
 
 
 if __name__ == "__main__":
